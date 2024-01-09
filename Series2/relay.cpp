@@ -16,7 +16,7 @@ struct Edge{
 };
 
 struct City{
-    vector<pair<int,int>> parents;//the parents and the distance to them
+    vector<pair<int,long>> parents;//the parents and the distance to them
     long distance;//distance to capital
     int speed;
     int p;//the loading time
@@ -25,7 +25,10 @@ struct City{
     }
     City(const City& parent,int index,long d): parents(parent.parents){
         distance = parent.distance+d;
-        pair<int,int> pair(index,d);
+        for (auto& parentPair : parents) {
+            parentPair.second += d;
+        }
+        pair<int,long> pair(index,d);
         parents.push_back(pair);
     }
 };
@@ -33,12 +36,17 @@ struct City{
 int main(){
     int n;
     cin >> n;
-    vector<Edge> g(n-1);
-    vector<long int> lt(n-1), tt(n-1); 
+    vector<City> Cities(n+1);
     for(int i = 0; i<n-1; ++i){
-        int u,v,d;
+        int u,v;
+        long d;
         cin >> u >> v >> d;
-        Edge e(u,v,d);
-        g[i] = e;
+        Cities[v] = City(Cities[u],u,d);
+    }
+    for(int i = 2; i<=n; ++i){
+        long p, s;
+        cin >> p >> s;
+        Cities[i].p = p;
+        Cities[i].speed = s;
     } 
 }
