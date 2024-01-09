@@ -1,56 +1,114 @@
 #include <iostream>
 #include <vector>
+#include <queue>
+#include <limits>
 
 using namespace std;
 
-const int MAX_NODES = 100005; // Adjust this according to the constraints
+struct Edge {
+    int to, capacity, cost, flow;
+    Edge(int t, int c, int cst, int f) : to(t), capacity(c), cost(cst), flow(f) {}
+};
 
-vector<pair<int, int>> adj[MAX_NODES]; // Adjacency list to represent the tree
-int loading_time[MAX_NODES]; // Loading time at each node
-double carrier_speed; // Carrier speed
+struct Graph {
+    int V; // Number of vertices
+    vector<vector<Edge>> adj;
 
-void dfs(int node, int parent, double current_time, vector<double>& min_time) {
-    // Calculate time to reach current node based on carrier speed and distance
-    current_time += (double)adj[parent][node].second / carrier_speed;
+    Graph(int V) : V(V), adj(V) {}
 
-    // Calculate minimum time considering loading time at the current node
-    min_time[node] = max(current_time, (double)loading_time[node]);
+    void addEdge(int from, int to, int capacity, int cost) {
+        Edge e1(to, capacity, cost, 0);
+        Edge e2(from, 0, -cost, 0);
+        adj[from].push_back(e1);
+        adj[to].push_back(e2);
+    }
+};
 
-    // Traverse the children
-    for (auto& child : adj[node]) {
-        if (child.first != parent) {
-            dfs(child.first, node, current_time, min_time);
+bool dijkstra(Graph& G, int source, vector<int>& distance) {
+    distance.assign(G.V, numeric_limits<int>::max());
+    vector<bool> visited(G.V, false);
+    distance[source] = 0;
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    pq.push({0, source});
+
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        pq.pop();
+
+        if (visited[u]) continue;
+        visited[u] = true;
+
+        for (const Edge& e : G.adj[u]) {
+            int v = e.to;
+            int w = e.cost;
+            if (e.capacity - e.flow > 0 && distance[v] > distance[u] + w) {
+                distance[v] = distance[u] + w;
+                pq.push({distance[v], v});
+            }
         }
     }
+
+    return distance[G.V - 1] != numeric_limits<int>::max();
+}
+
+int minCostFlow(Graph& G, int source) {
+    vector<int> distance(G.V);
+    int minCost = 0;
+
+    while (dijkstra(G, source, distance)) {
+        int flow = numeric_limits<int>::max();
+
+        // Calculate max possible flow along the path
+        for (int v = G.V - 1; v != source; v = G.adj[v][0].to) {
+            flow = min(flow, G.adj[v][0].capacity - G.adj[v][0].flow);
+        }
+
+        // Update flow and cost
+        for (int v = G.V - 1; v != source; v = G.adj[v][0].to) {
+            G.adj[v][0].flow += flow;
+            G.adj[G.adj[v][0].to][0].flow -= flow;
+            minCost += flow * G.adj[v][0].cost;
+        }
+    }
+
+    return minCost;
 }
 
 int main() {
-    int n;
-    cin >> n;
+    int N; // Number of cities
+    cin >> N;
 
-    // Read edges and distances
-    for (int i = 0; i < n - 1; ++i) {
-        int u, v, d;
-        cin >> u >> v >> d;
-        adj[u].push_back({v, d});
-        adj[v].push_back({u, d});
+    Graph G(N);
+
+    // Reading paths and distances between cities
+    for (int i = 1; i < N; ++i) {
+        int from, to, distance;
+        cin >> from >> to >> distance;
+        G.addEdge(from, to, numeric_limits<int>::max(), distance);  // Add edge from 'from' to 'to' with given distance as cost
     }
 
-    // Read loading time and carrier speed for each node
-    for (int i = 1; i < n; ++i) {
-        cin >> loading_time[i] >> carrier_speed;
+    // Reading loading time and travel time for each city
+    vector<pair<int, int>> sleigh_info(N); // Pi and Si for each city
+    for (int i = 1; i < N; ++i) {
+        int loading_time, travel_time;
+        cin >> loading_time >> travel_time;
+        sleigh_info[i] = make_pair(loading_time, travel_time);
     }
 
-    // Vector to store minimum time for each node
-    vector<double> min_time(n);
+    int source = 0; // Assuming capital city is at index 0
+    int target = 1; // Set your target city index
 
-    // Perform Depth-First Search (DFS) to calculate minimum time for each node
-    dfs(1, 0, 0, min_time);
-
-    // Output the minimum time for each node
-    for (int i = 1; i <= n; ++i) {
-        cout << "Minimum time for node " << i << ": " << min_time[i] << " units" << endl;
+    // Add edges from source to cities and between cities as per the given sleigh information
+    for (int i = 1; i < N; ++i) {
+        G.addEdge(source, i, sleigh_info[i].first, 0); // Add edge from source to each city with loading time as capacity and 0 cost
+        G.addEdge(i, target, numeric_limits<int>::max(),sleigh_info[i].second); // Add edge from each city to the target with capacity and travel time as cost
     }
+
+    int minTime = minCostFlow(G, source);
+    cout << "Minimum time for each city's letters to reach the capital: " << minTime << " seconds\n";
 
     return 0;
 }
+
+

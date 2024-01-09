@@ -1,16 +1,33 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <utility>
 
 using namespace std;
 
 struct Edge{
-    int u, v, d;
-    Edge(int k, int l, int m){
+    int u, v;
+    long cost;
+    Edge(int k, int l, long m){
         u = k;
         v = l;
-        d = m;
+        cost = m;
     } 
+};
+
+struct City{
+    vector<pair<int,int>> parents;//the parents and the distance to them
+    long distance;//distance to capital
+    int speed;
+    int p;//the loading time
+    City(){
+        distance = 0;
+    }
+    City(const City& parent,int index,long d): parents(parent.parents){
+        distance = parent.distance+d;
+        pair<int,int> pair(index,d);
+        parents.push_back(pair);
+    }
 };
 
 int main(){
