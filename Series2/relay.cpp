@@ -3,6 +3,7 @@
 #include <queue>
 #include <utility>
 #include <limits>
+#include <list>
 
 using namespace std;
 
@@ -62,16 +63,47 @@ vector<long long> dijkstra(vector<vector<Edge>>& graph, int start) {
     return distance;
 }
 
+struct Edge_aux{
+    int vert;
+    long d;
+    Edge_aux(int k, long l){
+        vert = k;
+        d = l;
+    }
+};
+
 int main(){
     int n;
     cin >> n;
     vector<City> Cities(n+1);
     vector<vector<Edge>> graph(n+1);
+    vector<vector<Edge_aux>> aux(n+1);
     for(int i = 0; i<n-1; ++i){
         int u,v;
         long d;
         cin >> u >> v >> d;
-        Cities[v] = City(Cities[u],u,d);
+        Edge_aux e1(v,d);
+        Edge_aux e2(u,d);
+        aux[u].push_back(e1);
+        aux[v].push_back(e2);
+        
+    }
+    vector<bool> visited(n+1,false);
+    list<int> queue;
+    visited[1] = true;
+    queue.push_back(1);
+    while (!queue.empty())
+    {
+        int s = queue.front();
+        queue.pop_front();
+        for(auto adjacent: aux[s]){
+            int adj = adjacent.vert; 
+            if(!visited[adj]){
+                visited[adj] = true;
+                queue.push_back(adj);
+                Cities[adj] = City(Cities[s],s,adjacent.d);
+            }
+        }   
     }
     for(int i = 2; i<=n; ++i){
         long p, s;
@@ -94,5 +126,5 @@ int main(){
     for (int i = 2; i < n; ++i) {
         cout << minCosts[i] << " ";
     }
-    cout << minCosts[n];  
+    cout << minCosts[n]<<endl;  
 }
