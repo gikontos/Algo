@@ -5,10 +5,10 @@ start_time=$(date +%s) # Record start time
 
 for i in {1..22}; do 
     start_time=$(date +%s) 
-    program_output=$( "./ch.exe" < "chocolate/input$i.txt" )
+    program_output=$( "Series2/relay.exe" < "relay/input$i.txt" )
     
     end_time=$(date +%s) # Record end time
-    expected_output=$(< "chocolate/output$i.txt" ) # No need for cat here, using redirection
+    expected_output=$(< "relay/output$i.txt" ) # No need for cat here, using redirection
     execution_time=$((end_time - start_time)) # Calculate execution time in seconds
 
 
