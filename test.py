@@ -2,21 +2,21 @@ import subprocess
 
 flag = 0
 
-for i in range(1, 21):
+for i in range(1, 23):
     try:
         # Run the highway.exe program with input file
         process = subprocess.Popen(
-            ["./Series3/highway.exe"],
+            ["./Series3/visit.exe"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
         )
 
-        with open(f"highway/input{i}.txt", "r") as input_file:
+        with open(f"visit/input{i}.txt", "r") as input_file:
             program_output, stderr = process.communicate(input=input_file.read())
 
-        expected_output = open(f"highway/output{i}.txt", "r").read()
+        expected_output = open(f"visit/output{i}.txt", "r").read()
 
         if process.returncode != 0 or program_output != expected_output:
             flag = 1
